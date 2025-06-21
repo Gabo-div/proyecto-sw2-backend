@@ -1,9 +1,3 @@
-¡Claro que sí! Un buen `README.md` es fundamental para que cualquier persona (¡incluido tu yo del futuro!) pueda entender y poner en marcha el proyecto rápidamente.
-
-Aquí tienes una versión mejorada, estructurada y profesional de tu `README.md`. Está escrita en **Markdown**, así que puedes copiarla y pegarla directamente en tu archivo `README.md`.
-
----
-
 # Api de Modelos
 
 Este repositorio contiene el backend de una API RESTful construida con un stack moderno de TypeScript, diseñada para ser rápida, segura y escalable. La API gestiona un catálogo de modelos 3D, organizados por categorías y subcategorías.

@@ -81,8 +81,6 @@ Una vez ejecutado, verás un mensaje en la consola indicando que el servidor est
 Server is running on http://localhost:3000
 ```
 
-¡Listo! Tu API ya está en funcionamiento.
-
 ## Endpoints de la API
 
 La API se sirve bajo el puerto `3000`. Aquí tienes un resumen de los endpoints disponibles:
@@ -110,6 +108,7 @@ curl.exe http://localhost:3000/models/1
 .
 ├── src/
 │   ├── assets/         # Archivos estáticos como modelos .glb
+|   |   ├──models/ 
 │   ├── db/
 │   │   ├── index.ts    # Configuración del cliente Drizzle y conexión
 │   │   └── schema.ts   # Definición de tablas y relaciones de la BD

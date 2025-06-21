@@ -90,7 +90,7 @@ La API se sirve bajo el puerto `3000`. Aquí tienes un resumen de los endpoints 
 | `GET`  | `/health`                 | Verifica el estado de la conexión con la base de datos.    |
 | `GET`  | `/models`                 | Obtiene una lista de todos los modelos con sus relaciones. |
 | `GET`  | `/models/:id`             | Obtiene los metadatos (JSON) de un modelo específico.      |
-| `GET`  | `/models/file/:id`        | Sirve el archivo `.glb` físico de un modelo específico.    |
+| `GET`  | `/models/static/:id`        | Sirve el archivo `.glb` físico de un modelo específico.    |
 | `POST` | `/models/sync-from-assets`| Sincroniza los archivos `.glb` locales con la base de datos.|
 
 ### Ejemplo de uso con `curl`

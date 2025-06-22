@@ -61,32 +61,24 @@ app.get("/all", async (c) => {
 
 app.post("/sync-from-assets", async (c) => {
   try {
-    // 1. Definir la ruta al directorio de assets
-    // process.cwd() obtiene el directorio raíz del proyecto
-    const modelsDir = path.join(process.cwd(), "src", "assets", "models");
+    const modelsDir = path.join(process.cwd(), "static");
 
-    // 2. Leer todos los archivos del directorio
     const filesInDir = await fs.readdir(modelsDir);
 
-    // 3. Filtrar para quedarnos solo con los archivos .glb
     const glbFiles = filesInDir.filter((file) => file.endsWith(".glb"));
 
     if (glbFiles.length === 0) {
-      return c.json({ message: "No .glb files found in src/assets/models" }, 404);
+      return c.json({ message: "No .glb files found in static" }, 404);
     }
 
-    // 4. (Opcional, pero recomendado) Evitar duplicados
-    // Consultamos las URLs que ya existen en la base de datos
     const existingModels = await db.select({ url: schema.models.url }).from(schema.models);
     const existingUrls = new Set(existingModels.map((m) => m.url));
 
-    // 5. Preparar los nuevos registros para la base de datos
     const newModelsToInsert = glbFiles
       .map((fileName) => {
         // La URL que guardaremos será relativa, para que sea más portable
-        const relativeUrl = path.join("assets", "models", fileName).replace(/\\/g, "/"); // Normalizar a slashes /
+        const relativeUrl = path.join("static", fileName).replace(/\\/g, "/");
         
-        // El nombre del modelo será el nombre del archivo sin la extensión .glb
         const modelName = path.parse(fileName).name;
 
         return {
@@ -94,14 +86,12 @@ app.post("/sync-from-assets", async (c) => {
           url: relativeUrl,
         };
       })
-      // Filtramos los modelos cuya URL ya existe en la base de datos
       .filter((model) => !existingUrls.has(model.url));
 
     if (newModelsToInsert.length === 0) {
       return c.json({ message: "All models are already in sync with the database." });
     }
 
-    // 6. Insertar los nuevos modelos en la base de datos
     const result = await db.insert(schema.models).values(newModelsToInsert).returning();
 
     return c.json({
@@ -111,7 +101,6 @@ app.post("/sync-from-assets", async (c) => {
 
   } catch (error) {
     console.error("Failed to sync models from assets:", error);
-    // Manejar el caso de que la carpeta no exista
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return c.json({ error: "The assets/models directory does not exist." }, 500);
     }

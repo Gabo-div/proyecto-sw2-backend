@@ -107,8 +107,6 @@ curl.exe http://localhost:3000/models/1
 ```
 .
 ├── src/
-│   ├── assets/         # Archivos estáticos como modelos .glb
-|   |   ├──models/ 
 │   ├── db/
 │   │   ├── index.ts    # Configuración del cliente Drizzle y conexión
 │   │   └── schema.ts   # Definición de tablas y relaciones de la BD
@@ -116,6 +114,7 @@ curl.exe http://localhost:3000/models/1
 │   │   └── models.ts
 │   ├── env.ts          # Validación de variables de entorno (opcional)
 │   └── index.ts        # Punto de entrada del servidor Hono
+├── static/         # Archivos estáticos como modelos .glb
 ├── .env.example        # Archivo de ejemplo para variables de entorno
 ├── package.json
 └── tsconfig.json

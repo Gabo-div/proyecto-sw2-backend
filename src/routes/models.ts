@@ -108,6 +108,55 @@ app.post("/sync-from-assets", async (c) => {
   }
 });
 
+/*app.post("/sync-from-assets", async (c) => {
+  try {
+    const modelsDir = path.join(process.cwd(), "static");
+
+    const filesInDir = await fs.readdir(modelsDir);
+
+    const glbFiles = filesInDir.filter((file) => file.endsWith(".glb"));
+
+    if (glbFiles.length === 0) {
+      return c.json({ message: "No .glb files found in static" }, 404);
+    }
+
+    const existingModels = await db.select({ url: schema.models.url }).from(schema.models);
+    const existingUrls = new Set(existingModels.map((m) => m.url));
+
+    const newModelsToInsert = glbFiles
+      .map((fileName) => {
+        // La URL que guardaremos será relativa, para que sea más portable
+        const relativeUrl = path.join("assets", "models", fileName).replace(/\\/g, "/");
+        
+        const modelName = path.parse(fileName).name;
+
+        return {
+          name: modelName,
+          url: relativeUrl,
+        };
+      })
+      .filter((model) => !existingUrls.has(model.url));
+
+    if (newModelsToInsert.length === 0) {
+      return c.json({ message: "All models are already in sync with the database." });
+    }
+
+    const result = await db.insert(schema.models).values(newModelsToInsert).returning();
+
+    return c.json({
+      message: `Successfully synced ${result.length} new models.`,
+      data: result,
+    });
+
+  } catch (error) {
+    console.error("Failed to sync models from assets:", error);
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return c.json({ error: "The assets/models directory does not exist." }, 500);
+    }
+    return c.json({ error: "An internal server error occurred." }, 500);
+  }
+});*/
+
 // Devuelve el archivo .glb físico correspondiente a un ID de modelo.
 app.get("/static/:id", async (c) => {
   try {

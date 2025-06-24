@@ -4,11 +4,11 @@ Este repositorio contiene el backend de una API RESTful construida con un stack 
 
 ## ✨ Características Principales
 
--   **Framework Ultrarrápido:** Construido con **[Hono](https://hono.dev/)**, un framework web ligero y extremadamente rápido ideal para cualquier entorno de JavaScript.
--   **ORM Moderno:** Utiliza **[Drizzle ORM](https://orm.drizzle.team/)** para interactuar con la base de datos de una manera segura, intuitiva y totalmente tipada, escribiendo TypeScript en lugar de SQL puro.
--   **Base de Datos Distribuida:** Conectado a **[Turso](https://turso.tech/)**, una base de datos distribuida basada en libSQL (un fork de SQLite), optimizada para baja latencia global.
--   **Totalmente en TypeScript:** Código 100% TypeScript de principio a fin, garantizando seguridad de tipos y una mejor experiencia de desarrollo.
--   **Gestión de Modelos 3D:** Incluye endpoints para sincronizar archivos `.glb` locales, obtener metadatos y servir los archivos directamente.
+- **Framework Ultrarrápido:** Construido con **[Hono](https://hono.dev/)**, un framework web ligero y extremadamente rápido ideal para cualquier entorno de JavaScript.
+- **ORM Moderno:** Utiliza **[Drizzle ORM](https://orm.drizzle.team/)** para interactuar con la base de datos de una manera segura, intuitiva y totalmente tipada, escribiendo TypeScript en lugar de SQL puro.
+- **Base de Datos Distribuida:** Conectado a **[Turso](https://turso.tech/)**, una base de datos distribuida basada en libSQL (un fork de SQLite), optimizada para baja latencia global.
+- **Totalmente en TypeScript:** Código 100% TypeScript de principio a fin, garantizando seguridad de tipos y una mejor experiencia de desarrollo.
+- **Gestión de Modelos 3D:** Incluye endpoints para sincronizar archivos `.glb` locales, obtener metadatos y servir los archivos directamente.
 
 ## 🚀 Puesta en Marcha (Getting Started)
 
@@ -17,8 +17,9 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno de desarr
 ### 1. Prerrequisitos
 
 Asegúrate de tener instalado lo siguiente:
--   [Node.js](https://nodejs.org/) (se recomienda la versión LTS, 18.x o superior)
--   [pnpm](https://pnpm.io/installation) (o puedes usar `npm` o `yarn`)
+
+- [Node.js](https://nodejs.org/) (se recomienda la versión LTS, 18.x o superior)
+- [pnpm](https://pnpm.io/installation) (o puedes usar `npm` o `yarn`)
 
 ### 2. Clonar el Repositorio
 
@@ -30,6 +31,7 @@ cd tu-repositorio
 ### 3. Instalar Dependencias
 
 Instala todas las dependencias del proyecto.
+
 ```bash
 pnpm install
 ```
@@ -40,6 +42,7 @@ Este proyecto requiere credenciales para conectarse a la base de datos de Turso.
 
 1.  **Crea tu archivo `.env`:**
     Copia el archivo de ejemplo para crear tu propio archivo de configuración local.
+
     ```bash
     cp .env.example .env
     ```
@@ -54,16 +57,19 @@ Este proyecto requiere credenciales para conectarse a la base de datos de Turso.
     # Token de autenticación para tu base de datos Turso
     DATABASE_TOKEN="..."
     ```
+
     > **Nota:** Puedes obtener estas credenciales usando la [CLI de Turso](https://docs.turso.tech/cli/instrucciones-de-instalacion) con los comandos `turso db show <db-name>` y `turso db tokens create <db-name>`.
 
 ### 5. Sincronizar la Base de Datos con el Esquema (Migraciones)
 
 Drizzle necesita aplicar el esquema definido en `src/db/schema.ts` a tu base de datos Turso.
 
-*Si aún no lo has hecho, ejecuta el siguiente comando para generar y aplicar las migraciones:*
+_Si aún no lo has hecho, ejecuta el siguiente comando para generar y aplicar las migraciones:_
+
 ```bash
 pnpm run db:push
 ```
+
 > Este comando leerá tu esquema y lo creará en la base de datos remota. Solo necesitas ejecutarlo cuando hagas cambios en `schema.ts`.
 
 ### 6. Ejecutar el Servidor de Desarrollo
@@ -77,6 +83,7 @@ pnpm run dev
 ```
 
 Una vez ejecutado, verás un mensaje en la consola indicando que el servidor está corriendo:
+
 ```
 Server is running on http://localhost:3000
 ```
@@ -85,15 +92,19 @@ Server is running on http://localhost:3000
 
 La API se sirve bajo el puerto `3000`. Aquí tienes un resumen de los endpoints disponibles:
 
-| Método | Ruta                      | Descripción                                                |
-| :----- | :------------------------ | :--------------------------------------------------------- |
-| `GET`  | `/health`                 | Verifica el estado de la conexión con la base de datos.    |
-| `GET`  | `/models`                 | Obtiene una lista de todos los modelos con sus relaciones. |
-| `GET`  | `/models/:id`             | Obtiene los metadatos (JSON) de un modelo específico.      |
-| `GET`  | `/models/static/:id`        | Sirve el archivo `.glb` físico de un modelo específico.    |
-| `POST` | `/models/sync-from-assets`| Sincroniza los archivos `.glb` locales con la base de datos.|
+| Método | Ruta                                          | Descripción                                                               |
+| :----- | :-------------------------------------------- | :------------------------------------------------------------------------ |
+| `GET`  | `/health`                                     | Verifica el estado de la conexión con la base de datos.                   |
+| `GET`  | `/models`                                     | Obtiene una lista de todos los modelos con sus relaciones.                |
+| `GET`  | `/models/:id`                                 | Obtiene los metadatos (JSON) de un modelo específico.                     |
+| `GET`  | `/models/static/:id`                          | Sirve el archivo `.glb` físico de un modelo específico.                   |
+| `POST` | `/models/sync-from-assets`                    | Sincroniza los archivos `.glb` locales con la base de datos.              |
+| `GET`  | `/categories?page&pageSize`                   | Obtiene una lista de todas las categorías.                                |
+| `GET`  | `/categories/:id`                             | Obtiene los datos de una categoría específica.                            |
+| `GET`  | `/categories/:id/subcategories?page&pageSize` | Obtiene una lista de todas las subcategorías de una categoría específica. |
 
 ### Ejemplo de uso con `curl`
+
 ```bash
 # Obtener todos los modelos
 curl.exe http://localhost:3000/models/

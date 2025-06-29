@@ -48,7 +48,7 @@ app.get("/:id", async (c) => {
   }
 
   const categoryData = await db.query.categories.findFirst({
-    where: eq(categories.id, categoryId)
+    where: eq(categories.id, categoryId),
   });
 
   if (!categoryData) {
@@ -57,8 +57,8 @@ app.get("/:id", async (c) => {
 
   const response = {
     id: categoryData.id,
-    name: categoryData.name
-  }
+    name: categoryData.name,
+  };
 
   return c.json(response);
 });

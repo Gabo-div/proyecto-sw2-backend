@@ -3,10 +3,8 @@ import { Hono } from "hono";
 import modelsRoutes from "@/routes/models";
 import categoriesRoutes from "@/routes/categories";
 
-
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
-
 
 const app = new Hono();
 
@@ -23,13 +21,10 @@ app.get("/health", async (c) => {
       status: "ok",
       message: "¡Se conectó exitosamente a Turso!",
     });
-    
   } catch (error) {
-
     console.error("Health check: Failed to connect to the database.", error);
-    
-    // Devuelve un código de estado 503 (Service Unavailable) para indicar un problema.
-    c.status(503); 
+
+    c.status(503);
     return c.json({
       status: "error",
       message: "No se pudo conectar a la base de datos.",
@@ -37,7 +32,6 @@ app.get("/health", async (c) => {
     });
   }
 });
-
 
 app.route("/models", modelsRoutes);
 app.route("/categories", categoriesRoutes);

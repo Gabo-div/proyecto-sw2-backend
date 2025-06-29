@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { drizzle } from "drizzle-orm/libsql";
 
-import { createClient } from "@libsql/client"; 
+import { createClient } from "@libsql/client";
 import * as schema from "@/db/schema";
 
 const client = createClient({
@@ -9,12 +9,4 @@ const client = createClient({
   authToken: env.DATABASE_TOKEN,
 });
 
-export const db = drizzle(client, { schema});
-
-
-/*export const db = drizzle({
-  connection: {
-    url: env.DATABASE_URL,
-    authToken: env.DATABASE_TOKEN,
-  },
-});*/
+export const db = drizzle(client, { schema });

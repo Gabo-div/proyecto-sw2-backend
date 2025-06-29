@@ -36,42 +36,43 @@ export const modelsSubcategories = sqliteTable(
   (table) => [primaryKey({ columns: [table.modelId, table.subcategoryId] })],
 );
 
-
 export const modelsRelations = relations(models, ({ many }) => ({
   modelsCategories: many(modelsCategories),
   modelsSubcategories: many(modelsSubcategories),
 }));
 
-// Una categoría puede tener muchas entradas en la tabla de unión
 export const categoriesRelations = relations(categories, ({ many }) => ({
   modelsCategories: many(modelsCategories),
 }));
 
-// Una subcategoría puede tener muchas entradas en la tabla de unión
 export const subcategoriesRelations = relations(subcategories, ({ many }) => ({
   modelsSubcategories: many(modelsSubcategories),
 }));
 
-// Relaciones para la tabla de unión de categorías
-export const modelsCategoriesRelations = relations(modelsCategories, ({ one }) => ({
-  model: one(models, {
-    fields: [modelsCategories.modelId],
-    references: [models.id],
+export const modelsCategoriesRelations = relations(
+  modelsCategories,
+  ({ one }) => ({
+    model: one(models, {
+      fields: [modelsCategories.modelId],
+      references: [models.id],
+    }),
+    category: one(categories, {
+      fields: [modelsCategories.categoryId],
+      references: [categories.id],
+    }),
   }),
-  category: one(categories, {
-    fields: [modelsCategories.categoryId],
-    references: [categories.id],
-  }),
-}));
+);
 
-// Relaciones para la tabla de unión de subcategorías
-export const modelsSubcategoriesRelations = relations(modelsSubcategories, ({ one }) => ({
-  model: one(models, {
-    fields: [modelsSubcategories.modelId],
-    references: [models.id],
+export const modelsSubcategoriesRelations = relations(
+  modelsSubcategories,
+  ({ one }) => ({
+    model: one(models, {
+      fields: [modelsSubcategories.modelId],
+      references: [models.id],
+    }),
+    subcategory: one(subcategories, {
+      fields: [modelsSubcategories.subcategoryId],
+      references: [subcategories.id],
+    }),
   }),
-  subcategory: one(subcategories, {
-    fields: [modelsSubcategories.subcategoryId],
-    references: [subcategories.id],
-  }),
-}));
+);

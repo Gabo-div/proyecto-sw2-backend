@@ -261,13 +261,13 @@ app.get("/:id", async (c) => {
     where: eq(models.id, modelId),
     with: {
       modelsCategories: {
-        with: {
-          category: true,
+        columns: {
+          categoryId: true,
         },
       },
       modelsSubcategories: {
-        with: {
-          subcategory: true,
+        columns: {
+          subcategoryId: true,
         },
       },
     },
@@ -277,15 +277,13 @@ app.get("/:id", async (c) => {
     return c.json({ error: "Model not found" }, 404);
   }
 
-  const response = {
+  return c.json({
     id: modelData.id,
     name: modelData.name,
     url: modelData.url,
-    categories: modelData.modelsCategories.map((mtc) => mtc.category),
-    subcategories: modelData.modelsSubcategories.map((mts) => mts.subcategory),
-  };
-
-  return c.json(response);
+    categories: modelData.modelsCategories.map((c) => c.categoryId),
+    subcategories: modelData.modelsSubcategories.map((c) => c.subcategoryId),
+  });
 });
 
 export default app;

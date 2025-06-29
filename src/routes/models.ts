@@ -129,7 +129,7 @@ app.get("/static/:id", async (c) => {
     }
 
     const modelData = model[0];
-    const filePath = path.join(process.cwd(), "src", modelData.url);
+    const filePath = path.join(process.cwd(), modelData.url);
 
     if (!fsSync.existsSync(filePath)) {
       console.error(

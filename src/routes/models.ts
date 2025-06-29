@@ -1,56 +1,150 @@
 import { Hono } from "hono";
 import { db } from "@/db";
-import { eq } from "drizzle-orm";
-import * as schema from "@/db/schema";
+import { and, eq, exists, inArray } from "drizzle-orm";
+import { models, modelsCategories, modelsSubcategories } from "@/db/schema";
 
 import fs from "node:fs/promises";
 import path from "node:path";
 import fsSync from "node:fs";
 import { stream } from "hono/streaming";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod/v4";
 
 const app = new Hono();
 
-app.get("/all", async (c) => {
-  try {
-    const allModelsData = await db.query.models.findMany({
-      with: {
-        modelsCategories: {
-          with: {
-            category: true,
-          },
-        },
-        modelsSubcategories: {
-          with: {
-            subcategory: true,
-          },
-        },
-      },
-      orderBy: (models, { asc }) => [asc(models.name)],
-    });
+app.get(
+  "/",
+  zValidator(
+    "query",
+    z.object({
+      page: z.coerce.number().default(1),
+      pageSize: z.coerce.number().default(10),
+      categories: z
+        .string()
+        .transform((v) => v.split(",").map(Number))
+        .pipe(z.number().array())
+        .default([]),
+      subcategories: z
+        .string()
+        .transform((v) => v.split(",").map(Number))
+        .pipe(z.number().array())
+        .default([]),
+    }),
+  ),
+  async (c) => {
+    try {
+      const { page, pageSize, categories, subcategories } =
+        c.req.valid("query");
 
-    if (allModelsData.length === 0) {
-      return c.json([]);
+      const offset = (page - 1) * pageSize;
+
+      console.log({ subcategories, categories });
+
+      const sq = subcategories.length
+        ? db
+            .select({
+              subcategoryId: modelsSubcategories.subcategoryId,
+            })
+            .from(modelsSubcategories)
+            .where(
+              and(
+                eq(modelsSubcategories.modelId, models.id),
+                inArray(modelsSubcategories.subcategoryId, subcategories),
+              ),
+            )
+        : db
+            .select({
+              categoryId: modelsCategories.categoryId,
+            })
+            .from(modelsCategories)
+            .where(
+              and(
+                eq(modelsCategories.modelId, models.id),
+                inArray(modelsCategories.categoryId, categories),
+              ),
+            );
+
+      const modelsWithLimit = db.$with("modelsWithLimit").as(
+        db
+          .select()
+          .from(models)
+          .where(
+            categories.length || subcategories.length ? exists(sq) : undefined,
+          )
+          .limit(pageSize + 1)
+          .offset(offset),
+      );
+
+      const rows = await db
+        .with(modelsWithLimit)
+        .select({
+          model: {
+            id: modelsWithLimit.id,
+            name: modelsWithLimit.name,
+            url: modelsWithLimit.url,
+          },
+          categoryId: modelsCategories.categoryId,
+          subcategoryId: modelsSubcategories.subcategoryId,
+        })
+        .from(modelsWithLimit)
+        .leftJoin(
+          modelsCategories,
+          eq(modelsCategories.modelId, modelsWithLimit.id),
+        )
+        .leftJoin(
+          modelsSubcategories,
+          eq(modelsSubcategories.modelId, modelsWithLimit.id),
+        );
+
+      const result = rows.reduce<
+        Record<
+          string,
+          typeof models.$inferInsert & {
+            categories: number[];
+            subcategories: number[];
+          }
+        >
+      >((acc, row) => {
+        const rowModel = row.model;
+        const rowCategoryId = row.categoryId;
+        const rowSubcategoryId = row.subcategoryId;
+
+        if (!acc[rowModel.id]) {
+          acc[rowModel.id] = { ...rowModel, categories: [], subcategories: [] };
+        }
+
+        if (
+          rowCategoryId &&
+          !acc[rowModel.id].categories.includes(rowCategoryId)
+        ) {
+          acc[rowModel.id].categories.push(rowCategoryId);
+        }
+
+        if (
+          rowSubcategoryId &&
+          !acc[rowModel.id].subcategories.includes(rowSubcategoryId)
+        ) {
+          acc[rowModel.id].subcategories.push(rowSubcategoryId);
+        }
+
+        return acc;
+      }, {});
+
+      const resultArray = Object.values(result);
+
+      return c.json({
+        page: page,
+        pageSize: pageSize,
+        total: resultArray.length,
+        data: resultArray,
+      });
+    } catch (error) {
+      console.error("Failed to fetch all models:", error);
+      c.status(500);
+      return c.json({ error: "An internal server error occurred" });
     }
-
-    const response = allModelsData.map((modelData) => {
-      return {
-        id: modelData.id,
-        name: modelData.name,
-        url: modelData.url,
-        categories: modelData.modelsCategories.map((mtc) => mtc.category),
-        subcategories: modelData.modelsSubcategories.map(
-          (mts) => mts.subcategory,
-        ),
-      };
-    });
-
-    return c.json(response);
-  } catch (error) {
-    console.error("Failed to fetch all models:", error);
-    c.status(500);
-    return c.json({ error: "An internal server error occurred" });
-  }
-});
+  },
+);
 
 app.post("/sync-from-assets", async (c) => {
   try {
@@ -64,9 +158,7 @@ app.post("/sync-from-assets", async (c) => {
       return c.json({ message: "No .glb files found in static" }, 404);
     }
 
-    const existingModels = await db
-      .select({ url: schema.models.url })
-      .from(schema.models);
+    const existingModels = await db.select({ url: models.url }).from(models);
     const existingUrls = new Set(existingModels.map((m) => m.url));
 
     const newModelsToInsert = glbFiles
@@ -89,7 +181,7 @@ app.post("/sync-from-assets", async (c) => {
     }
 
     const result = await db
-      .insert(schema.models)
+      .insert(models)
       .values(newModelsToInsert)
       .returning();
 
@@ -120,8 +212,8 @@ app.get("/static/:id", async (c) => {
 
     const model = await db
       .select()
-      .from(schema.models)
-      .where(eq(schema.models.id, modelId))
+      .from(models)
+      .where(eq(models.id, modelId))
       .limit(1);
 
     if (model.length === 0) {
@@ -166,7 +258,7 @@ app.get("/:id", async (c) => {
   }
 
   const modelData = await db.query.models.findFirst({
-    where: eq(schema.models.id, modelId),
+    where: eq(models.id, modelId),
     with: {
       modelsCategories: {
         with: {

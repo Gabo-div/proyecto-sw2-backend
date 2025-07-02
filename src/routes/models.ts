@@ -203,49 +203,42 @@ app.post("/sync-from-assets", async (c) => {
 
 app.get("/static/:id", async (c) => {
   try {
-    const id = c.req.param("id");
-    const modelId = parseInt(id, 10);
+    const id = parseInt(c.req.param("id") || "", 10);
+    if (isNaN(id)) return c.json({ error: "Invalid model ID" }, 400);
 
-    if (isNaN(modelId)) {
-      return c.json({ error: "Invalid model ID" }, 400);
-    }
-
-    const model = await db
+    const result = await db
       .select()
       .from(models)
-      .where(eq(models.id, modelId))
+      .where(eq(models.id, id))
       .limit(1);
 
-    if (model.length === 0) {
+    if (result.length === 0){
       return c.json({ error: "Model not found" }, 404);
     }
+    const modelData = result[0];
 
-    const modelData = model[0];
-    const filePath = path.join(process.cwd(), modelData.url);
-
-    if (!fsSync.existsSync(filePath)) {
-      console.error(
-        `File not found at path: ${filePath}. DB might be out of sync.`,
-      );
-      return c.json({ error: "File not found on server" }, 404);
-    }
+    // Usa fetch para traer el archivo remoto (por ejemplo de GitHub)
+    const response = await fetch(modelData.url);
+    if (!response.ok)
+      return c.json({ error: "Unable to fetch model file" }, 404);
 
     c.header("Content-Type", "model/gltf-binary");
-    c.header(
-      "Content-Disposition",
-      `inline; filename="${path.basename(filePath)}"`,
-    );
+    c.header("Content-Disposition", `inline; filename="modelo_${id}.glb"`);
 
+    if (!response.ok || !response.body) {
+      return c.json({ error: "No se pudo obtener el archivo remoto" }, 404);
+    }
+
+    // Ahora TypeScript sabe que response.body no es null
     return stream(c, async (honoStream) => {
-      const nodeStream = fsSync.createReadStream(filePath);
-
-      for await (const chunk of nodeStream) {
+      for await (const chunk of response.body!) {
         await honoStream.write(chunk);
       }
     });
-  } catch (error) {
-    console.error(`Failed to serve model:`, error);
-    return c.json({ error: "An internal server error occurred" }, 500);
+
+  } catch (err) {
+    console.error("Error al servir el modelo:", err);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
 

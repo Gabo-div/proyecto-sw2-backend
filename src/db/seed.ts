@@ -75,7 +75,7 @@ export async function seed() {
         // 1. Insertar el modelo
         const [insertedModel] = await tx
           .insert(models)
-          .values({ name: modelName, url: glbFilePath })
+          .values({ name: modelName, url: `static/${modelName}.glb` })
           .returning({ id: models.id });
 
         // 2. Procesar la Categoría

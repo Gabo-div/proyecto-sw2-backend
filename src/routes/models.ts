@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { and, eq, exists, inArray } from "drizzle-orm";
 import { models, modelsCategories, modelsSubcategories } from "@/db/schema";
 
-import fs from "node:fs/promises";
 import path from "node:path";
 import fsSync from "node:fs";
 import { stream } from "hono/streaming";
@@ -145,61 +144,6 @@ app.get(
     }
   },
 );
-
-app.post("/sync-from-assets", async (c) => {
-  try {
-    const modelsDir = path.join(process.cwd(), "static");
-
-    const filesInDir = await fs.readdir(modelsDir);
-
-    const glbFiles = filesInDir.filter((file) => file.endsWith(".glb"));
-
-    if (glbFiles.length === 0) {
-      return c.json({ message: "No .glb files found in static" }, 404);
-    }
-
-    const existingModels = await db.select({ url: models.url }).from(models);
-    const existingUrls = new Set(existingModels.map((m) => m.url));
-
-    const newModelsToInsert = glbFiles
-      .map((fileName) => {
-        const relativeUrl = path.join("static", fileName).replace(/\\/g, "/");
-
-        const modelName = path.parse(fileName).name;
-
-        return {
-          name: modelName,
-          url: relativeUrl,
-        };
-      })
-      .filter((model) => !existingUrls.has(model.url));
-
-    if (newModelsToInsert.length === 0) {
-      return c.json({
-        message: "All models are already in sync with the database.",
-      });
-    }
-
-    const result = await db
-      .insert(models)
-      .values(newModelsToInsert)
-      .returning();
-
-    return c.json({
-      message: `Successfully synced ${result.length} new models.`,
-      data: result,
-    });
-  } catch (error) {
-    console.error("Failed to sync models from assets:", error);
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      return c.json(
-        { error: "The assets/models directory does not exist." },
-        500,
-      );
-    }
-    return c.json({ error: "An internal server error occurred." }, 500);
-  }
-});
 
 app.get("/static/:id", async (c) => {
   try {
